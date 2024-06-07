@@ -13,5 +13,7 @@ namespace UsuariosApp.Domain.Interfaces.Services
         void CriarConta(Usuario usuario);
 
         Usuario? Autenticar(string emai, string senha);
+
+        Usuario? ObterDados(Guid id);
     }
 }

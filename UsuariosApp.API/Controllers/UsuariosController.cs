@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using UsuariosApp.API.DTOs;
 using UsuariosApp.API.DTOs.RequestDTO;
 using UsuariosApp.API.DTOs.ResponseDTO;
+using UsuariosApp.API.DTOs.ResponsesDTO;
 using UsuariosApp.API.Security;
 using UsuariosApp.Domain.Entities;
 using UsuariosApp.Domain.Interfaces.Services;
@@ -83,6 +85,43 @@ namespace UsuariosApp.API.Controllers
                 return StatusCode(422, new { e.Message });
             }
             catch(Exception e)
+            {
+                return StatusCode(500, new { e.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("obter-dados")]
+        [ProducesResponseType(typeof(ObterDadosUsuarioResponseDTO),200)]
+        public IActionResult Get()
+        {
+            try
+            {
+                var id = Guid.Parse(User.Identity.Name);
+
+                var usuario = _usuarioDomainService.ObterDados(id);
+
+                var response = new ObterDadosUsuarioResponseDTO
+                {
+                    Id = usuario.Id,
+                    NomeUsuario = usuario.Nome,
+                    Email = usuario.Email,
+                    PerfilId = usuario.Perfil.Id,
+                    NomePerfil = usuario.Perfil.Nome,
+                    DataHoraCadastro = usuario.DataHoraCadastro
+
+
+                };
+
+                return StatusCode(200, response);
+
+            }
+            catch (ApplicationException e)
+            {
+                return StatusCode(422, new { e.Message });
+            }
+            catch (Exception e)
             {
                 return StatusCode(500, new { e.Message });
             }

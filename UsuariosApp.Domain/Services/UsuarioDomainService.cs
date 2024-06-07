@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UsuariosApp.Domain.Entities;
 using UsuariosApp.Domain.Helpers;
+using UsuariosApp.Domain.Interfaces.Messages;
 using UsuariosApp.Domain.Interfaces.Repositories;
 using UsuariosApp.Domain.Interfaces.Services;
+using UsuariosApp.Domain.Models;
 
 namespace UsuariosApp.Domain.Services
 {
@@ -14,11 +17,14 @@ namespace UsuariosApp.Domain.Services
     {
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IPerfilRepository _perfilRepository;
+        private readonly IMessageProducer _messageProducer;
 
-        public UsuarioDomainService(IUsuarioRepository usuarioRepository, IPerfilRepository perfilRepository)
+
+        public UsuarioDomainService(IUsuarioRepository usuarioRepository, IPerfilRepository perfilRepository, IMessageProducer messageProducer)
         {
             _usuarioRepository = usuarioRepository;
             _perfilRepository = perfilRepository;
+            _messageProducer = messageProducer;
         }
 
         public void CriarConta(Usuario usuario)
@@ -52,6 +58,20 @@ namespace UsuariosApp.Domain.Services
 
             #endregion
 
+            #region Enviar mensagens de boas vindas ao usuário
+
+            var mensagem = new Mensagem
+            {
+                Destinatario=usuario.Email,
+                Assunto="Conta de usuário criada com sucesso.",
+                Texto=$"Olá,{usuario.Nome},\nParabéns, sua conta foi criada no nosso sistema.\n\nAtt\nCOTI Informática."
+            };
+
+            _messageProducer.Send(JsonConvert.SerializeObject(mensagem));
+
+            #endregion
+
+
         }
 
         public Usuario? Autenticar(string email, string senha)
@@ -77,6 +97,16 @@ namespace UsuariosApp.Domain.Services
 
             #endregion
 
+        }
+
+        public Usuario? ObterDados(Guid id)
+        {
+            var usuario = _usuarioRepository.GetById(id);
+
+            if (usuario != null)
+                return usuario;
+            else
+                throw new ApplicationException("Usuário não encontrado. ");
         }
     }
 }

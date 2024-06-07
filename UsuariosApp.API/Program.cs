@@ -1,25 +1,19 @@
-using UsuariosApp.Domain.Interfaces.Repositories;
-using UsuariosApp.Domain.Interfaces.Services;
-using UsuariosApp.Domain.Services;
-using UsuariosApp.Infra.Data.Repositories;
+using UsuariosApp.API.Configurations;
+using UsuariosApp.Infra.Messages.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
 
 builder.Services.AddControllers();
 builder.Services.AddRouting(config => { config.LowercaseUrls = true; });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-#region Injeções de dependências
+SwaggerConfiguration.Configure(builder.Services);
+DependencyInjectionConfiguration.Configure(builder.Services);
+JwtConfiguration.Configure(builder.Services);
+CorsConfiguration.Configure(builder.Services);
 
-builder.Services.AddTransient<IUsuarioDomainService, UsuarioDomainService>();
-builder.Services.AddTransient<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddTransient<IPerfilRepository, PerfilRepository>();
-
-#endregion
+builder.Services.AddHostedService<MessageConsumer>();
 
 var app = builder.Build();
 
@@ -30,10 +24,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+CorsConfiguration.Use(app);
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
 
 public partial class Program { }
